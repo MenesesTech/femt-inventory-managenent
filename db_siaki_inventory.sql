@@ -16,10 +16,10 @@ CREATE TABLE seguridad_rol(
 );
 CREATE TABLE seguridad_usuario(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    username VARCHAR(20) NOT NULL,
+    username VARCHAR(20) UNIQUE NOT NULL,
     password_hash VARCHAR(128) NOT NULL,
     nombre VARCHAR(20) NOT NULL,
-    email VARCHAR(50) NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
     telefono VARCHAR(9) NOT NULL,
     id_rol INT NOT NULL,
     CONSTRAINT seguridad_rol_usuario_fk
