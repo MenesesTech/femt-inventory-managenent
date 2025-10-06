@@ -1,10 +1,13 @@
 package com.femt.inventory_management.model.produccion;
 
+import com.femt.inventory_management.model.inventario.InventarioProducto;
 import com.femt.inventory_management.model.seguridad.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -42,4 +45,15 @@ public class OrdenProduccion {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pegatina", nullable = false)
     private PegatinaDecorativa pegatinaDecorativa;
+
+    // Una orden de producción puede generar varios productos en inventario
+    @NonNull
+    @OneToMany(
+            mappedBy = "ordenProduccion",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<InventarioProducto> inventarios = new ArrayList<>();
+
 }
