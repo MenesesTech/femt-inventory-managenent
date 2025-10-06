@@ -18,7 +18,7 @@ public class MermaMaterial{
 
     @NonNull
     @Column(nullable = false, length = 50)
-    private String descipcion;
+    private String descripcion;
 
     @NonNull
     @Column(nullable = false)
