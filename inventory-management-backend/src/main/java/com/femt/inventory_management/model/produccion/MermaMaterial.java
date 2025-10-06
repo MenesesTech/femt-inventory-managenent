@@ -1,4 +1,4 @@
 package com.femt.inventory_management.model.produccion;
 
-public class MermaMaterial {
+public class MermaMaterial{
 }

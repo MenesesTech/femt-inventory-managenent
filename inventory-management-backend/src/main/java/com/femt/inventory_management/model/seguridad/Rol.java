@@ -1,5 +1,6 @@
 package com.femt.inventory_management.model.seguridad;
 
+import com.femt.inventory_management.model.seguridad.enums.RolUsuarioEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +16,7 @@ public class Rol {
     private Integer id;
 
     @NonNull
-    @Column(nullable = false, length = 15)
-    private String nombre;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nombre",nullable = false, length = 15)
+    private RolUsuarioEnum rolUsuario;
 }

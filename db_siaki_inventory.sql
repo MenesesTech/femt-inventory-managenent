@@ -26,7 +26,7 @@ CREATE TABLE seguridad_usuario(
     FOREIGN KEY (id_rol) REFERENCES seguridad_rol(id) ON DELETE CASCADE
 );
 
-/* =========== INVENTARIO =========== */
+/* =========== PRODUCCION =========== */
 CREATE TABLE produccion_proveedor(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
 	nombre_razon_social VARCHAR(30) NOT NULL,
@@ -50,16 +50,16 @@ CREATE TABLE produccion_compra(
 );
 CREATE TABLE produccion_color(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    decripcion VARCHAR(20) NOT NULL,
+    nombre VARCHAR(20) NOT NULL,
     rgb_color VARCHAR(6) NOT NULL
 );
 CREATE TABLE produccion_categoria(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    descripcion VARCHAR(20) NOT NULL -- NINOS, NINAS
+    nombre VARCHAR(20) NOT NULL -- NINOS, NINAS
 );
 CREATE TABLE produccion_tipo(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    descripcion VARCHAR(20) NOT NULL -- Ojota, Mapis, Zapatilla
+    nombre VARCHAR(20) NOT NULL -- Ojota, Mapis, Zapatilla
 );
 CREATE TABLE produccion_talla(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE produccion_talla(
 );
 CREATE TABLE produccion_pegatina(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    descripcion VARCHAR(20) NOT NULL, -- STICH, CAPIBARA, LABUBU
+    nombre VARCHAR(20) NOT NULL, -- STICH, CAPIBARA, LABUBU
     cantidad INT NOT NULL,
     id_compra INT NOT NULL,
     CONSTRAINT produccion_compra_pegatina_fk
@@ -265,20 +265,20 @@ INSERT INTO produccion_compra (fecha_compra, nro_comprobante, tipo_comprobante, 
 ('2025-08-15', 'F001-0002', 'FACTURA', 2000.00, 'YAPE', '2025-08-16', 'PAGADO', 3);
 
 /* Colores */
-INSERT INTO produccion_color (decripcion, rgb_color) VALUES
+INSERT INTO produccion_color (nombre, rgb_color) VALUES
 ('Rojo', 'FF0000'),
 ('Azul', '0000FF'),
 ('Verde', '00FF00'),
 ('Negro', '000000');
 
 /* Categorías */
-INSERT INTO produccion_categoria (descripcion) VALUES
+INSERT INTO produccion_categoria (nombre) VALUES
 ('Niños'),
 ('Niñas'),
 ('Unisex');
 
 /* Tipos de Calzado */
-INSERT INTO produccion_tipo (descripcion) VALUES
+INSERT INTO produccion_tipo (nombre) VALUES
 ('Ojota'),
 ('Mapis'),
 ('Zapatilla');
@@ -290,7 +290,7 @@ INSERT INTO produccion_talla (min_talla, max_talla, id_tipo) VALUES
 (36, 42, 3); -- Zapatilla
 
 /* Pegatinas */
-INSERT INTO produccion_pegatina (descripcion, cantidad, id_compra) VALUES
+INSERT INTO produccion_pegatina (nombre, cantidad, id_compra) VALUES
 ('Stich', 100, 1),
 ('Capibara', 150, 2),
 ('Labubu', 200, 3);
