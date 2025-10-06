@@ -39,6 +39,7 @@ public class Proveedor {
 
 
     // Para ver las compras de un proveedor
+    @NonNull
     @OneToMany(
             mappedBy = "proveedor",
             cascade = CascadeType.ALL,

@@ -4,6 +4,8 @@ import com.femt.inventory_management.model.produccion.enums.ColorProductoEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter

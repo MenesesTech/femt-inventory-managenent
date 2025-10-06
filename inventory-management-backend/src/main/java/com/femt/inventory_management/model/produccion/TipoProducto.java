@@ -24,6 +24,7 @@ public class TipoProducto {
     private TipoProductoEnum tipoProducto;
 
     // Para ver las tallas de un tipo de calzado
+    @NonNull
     @OneToMany(
             mappedBy = "tipoProducto",
             cascade = CascadeType.ALL,

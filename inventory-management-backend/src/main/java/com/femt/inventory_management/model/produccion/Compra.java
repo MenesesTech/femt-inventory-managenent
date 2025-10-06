@@ -58,6 +58,7 @@ public class Compra {
     private Proveedor proveedor;
 
     // Para ver los detalles de compra de cada pegatina
+    @NonNull
     @OneToMany(
             mappedBy = "compra",
             cascade = CascadeType.ALL,
@@ -65,4 +66,14 @@ public class Compra {
             fetch = FetchType.LAZY
     )
     private List<PegatinaDecorativa> pegatinas = new ArrayList<>();
+
+    // Para ver detalles de las plantas y tiras asociadas a una compra
+    @NonNull
+    @OneToMany(
+            mappedBy = "compra",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<ParteProducto> partesProductos = new ArrayList<>();
 }

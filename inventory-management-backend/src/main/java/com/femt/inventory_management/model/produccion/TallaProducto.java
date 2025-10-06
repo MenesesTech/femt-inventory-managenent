@@ -22,6 +22,7 @@ public class TallaProducto {
     @Column(name = "max_talla", nullable = false)
     private Integer maxTalla;
 
+    @NonNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tipo", nullable = false)
     private TipoProducto tipoProducto;
