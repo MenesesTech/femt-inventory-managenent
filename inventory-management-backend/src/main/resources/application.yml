@@ -1,0 +1,37 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          auth0:
+            client-id: ${AUTH_CLIENT_ID}
+            client-secret: ${AUTH_CLIENT_SECRET}
+            scope:
+            - openid
+            - profile
+            - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/auth0"
+        provider:
+          auth0:
+            issuer-uri: ${AUTH0_ISSUER_URI}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: 'true'
+    hibernate:
+      ddl-auto: validate
+    show-sql: 'true'
+    open-in-view: 'false'
+  application:
+    name: inventory-management
+  datasource:
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER_CLASS}
+    username: ${DB_USERNAME}
+    url: ${DB_URL}
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+server:
+  port: 8080
