@@ -16,11 +16,11 @@ CREATE TABLE seguridad_rol(
 );
 CREATE TABLE seguridad_usuario(
 	id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    auth0Id VARCHAR(128) NOT NULL,
     username VARCHAR(20) UNIQUE NOT NULL,
-    password_hash VARCHAR(128) NOT NULL,
     nombre VARCHAR(20) NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
-    telefono VARCHAR(9) NOT NULL,
+    telefono VARCHAR(9) NULL,
     id_rol INT NOT NULL,
     CONSTRAINT seguridad_rol_usuario_fk
     FOREIGN KEY (id_rol) REFERENCES seguridad_rol(id) ON DELETE CASCADE
@@ -242,15 +242,15 @@ WHERE pc.estado = 'PENDIENTE';
 /* ==================== DATOS DE PRUEBA ==================== */
 /* Seguridad - Roles */
 INSERT INTO seguridad_rol (nombre) VALUES
-('Administrador'),
-('Empleado');
+('ADMIN'),
+('EMPLEADO');
 
 /* Seguridad - Usuarios */
-INSERT INTO seguridad_usuario (username, password_hash, nombre, email, telefono, id_rol) VALUES
-('menesesfemt', '1234', 'Frey', 'menesesfrey@gmail.com', '916345123', 1),
-('cnavarro', '1234', 'Carlos', 'cnavarro@gmail.com', '987654321', 2),
-('mlopez', '1234', 'Maria', 'mlopez@gmail.com', '945612378', 1),
-('jrodriguez', '1234', 'Juan', 'jrodriguez@gmail.com', '956784123', 2);
+INSERT INTO seguridad_usuario (auth0Id, username, nombre, email, telefono, id_rol) VALUES
+('ffeeb26d073070f4b56f16326235001f','menesesfemt','Frey', 'menesesfrey@gmail.com', '916345123', 1),
+('62acd45f9c8db026b251e661f0dcb2e6','cnavarro','Carlos', 'cnavarro@gmail.com', '987654321', 2),
+('5c30d5c039a5684d242ca6060e9b2cf6','mlopez','Maria', 'mlopez@gmail.com', '945612378', 1),
+('fc9ff21d2db05f33b06780521cab8a8d','jrodriguez','Juan', 'jrodriguez@gmail.com', '956784123', 2);
 
 /* Proveedores */
 INSERT INTO produccion_proveedor (nombre_razon_social, apellido, direccion, telefono, ruc) VALUES
