@@ -3,7 +3,7 @@ package com.femt.inventory_management.models.dimension;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
+@MappedSuperclass
 @Getter
 @Setter
 @NoArgsConstructor
