@@ -10,8 +10,6 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
-@RequiredArgsConstructor
 @Table(name = "dim_tipo_componente")
 public class DimTipoComponente extends DimBase{
 }

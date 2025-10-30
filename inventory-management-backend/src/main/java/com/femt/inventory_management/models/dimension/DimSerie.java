@@ -10,8 +10,6 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
-@RequiredArgsConstructor
 @Table(name = "dim_serie")
 public class DimSerie extends DimBase{
 
