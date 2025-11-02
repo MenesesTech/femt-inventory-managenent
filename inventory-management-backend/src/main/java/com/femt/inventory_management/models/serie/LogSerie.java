@@ -9,7 +9,19 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @RequiredArgsConstructor
-@Table(name = "log_serie")
+@Table(name = "log_serie",
+        uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_serie_composicion",
+                columnNames = {
+                        "id_categoria",
+                        "id_modelo",
+                        "id_serie",
+                        "id_talla",
+                        "id_color"
+                }
+        )
+        })
 public class LogSerie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
