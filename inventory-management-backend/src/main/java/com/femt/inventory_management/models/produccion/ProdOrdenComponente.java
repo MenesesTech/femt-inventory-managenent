@@ -9,6 +9,17 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * <p>Esta tabla representa la primera fase de producción es como la <b>solicitud formal</b> para producir un lote de
+ * componentes (Plantas o Tiras). Es el inicio del flujo de producción.</p>
+ * <p>Una orden inicia en estado "PENDIENTE" y es procesada por @ProduccionService
+ * para convertirse en "TERMINADO", lo que a su vez incrementa el stock en {@link com.femt.inventory_management.models.inventario.InventarioComponentes}.</p>
+ *
+ * <>
+ * @author MenesesTech
+ * @version 1.0
+ * @since 2025-11-01
+ */
 @Entity
 @Getter
 @Setter
