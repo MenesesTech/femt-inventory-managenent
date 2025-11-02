@@ -10,6 +10,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * <p>Esta tabla representa el stock del <b>producto final ensamblado</b>
+ * (la sandalia completa), que está listo para la venta.</p>
+ *
+ * <p>El stock de esta tabla <b>aumenta</b> cuando se crea una
+ * {@link com.femt.inventory_management.models.produccion.ProdOrdenEnsamblaje}
+ * (lo que consume stock de {@link InventarioComponentes}).</p>
+ *
+ * <p>El stock <b>disminuye</b> cuando se genera una venta
+ * ({@link com.femt.inventory_management.models.ventas.VentasPedidoDetalle}).</p>
+ *
+ * <p>La restricción {@code @UniqueConstraint} define el <b>SKU del Producto Final</b>.
+ * Nótese que no incluye "tipo_componente" (porque es una sandalia completa)
+ * pero sí incluye <b>dos campos de color</b> para la planta y la tira.</p>
+ */
 @Entity
 @Getter
 @Setter
