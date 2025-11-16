@@ -17,5 +17,6 @@ import lombok.*;
 @Setter
 @Table(name = "dim_color")
 public class DimColor extends DimBase{
-
+    @Column(name = "codergb", nullable = false, length = 10)
+    private String codeRgb;
 }

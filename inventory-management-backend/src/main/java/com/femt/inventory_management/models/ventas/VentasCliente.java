@@ -37,22 +37,22 @@ public class VentasCliente {
     private String dni;
 
     // Acceder desde clientes a sus pedidos
-    @OneToMany(
-            mappedBy = "cliente",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
-    @JsonIgnore
-    private List<VentasPedido> pedidos = new ArrayList<>();
-
-    public void addPedido(VentasPedido pedido){
-        pedidos.add(pedido);
-        pedido.setCliente(this);
-    }
-
-    public void removePedido(VentasPedido pedido) {
-        pedidos.remove(pedido);
-        pedido.setCliente(null);
-    }
+//    @OneToMany(
+//            mappedBy = "cliente",
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true,
+//            fetch = FetchType.LAZY
+//    )
+//    @JsonIgnore
+//    private List<VentasPedido> pedidos = new ArrayList<>();
+//
+//    public void addPedido(VentasPedido pedido){
+//        pedidos.add(pedido);
+//        pedido.setCliente(this);
+//    }
+//
+//    public void removePedido(VentasPedido pedido) {
+//        pedidos.remove(pedido);
+//        pedido.setCliente(null);
+//    }
 }
