@@ -52,7 +52,7 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- Cliente OAuth2 (para integración con Auth0) -->
+		<!-- VentasCliente OAuth2 (para integración con Auth0) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-client</artifactId>
