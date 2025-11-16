@@ -1,5 +1,6 @@
 package com.femt.inventory_management.models.ventas;
 
+import com.femt.inventory_management.models.inventario.InventarioSandalias;
 import com.femt.inventory_management.models.seguridad.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,6 +39,11 @@ public class VentasPedido {
     @JoinColumn(name = "id_usuario", nullable = false,
             foreignKey = @ForeignKey(name = "seguridad_usuario_pedido_fk"))
     private Usuario usuario;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_inventario", nullable = false,
+            foreignKey = @ForeignKey(name = "inv_sandalias_pedido_fk"))
+    private InventarioSandalias invSandalias;
 
     @Column(name = "monto_total", precision = 10, scale = 2, nullable = false)
     private BigDecimal montoTotal = BigDecimal.ZERO;
