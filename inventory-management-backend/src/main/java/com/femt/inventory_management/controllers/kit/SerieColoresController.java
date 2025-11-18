@@ -26,7 +26,7 @@ public class SerieColoresController {
                 .body(serieService.guardarSerie(requestDTO));
     }
 
-    // LISTAR TODO
+    // LISTAR_TODO
     @GetMapping("/listar")
     public ResponseEntity<List<KitSerieResponseDTO>> listarTodo() {
         return ResponseEntity.ok(serieService.listarTodo());
