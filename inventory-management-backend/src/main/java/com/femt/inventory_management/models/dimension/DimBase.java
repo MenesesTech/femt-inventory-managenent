@@ -32,7 +32,7 @@ public abstract class DimBase {
      * - DimTipoComponente(nombre): "Planta", "Tira".
      */
     @NonNull
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 20, unique = true)
     private String nombre;
 
 }
