@@ -12,23 +12,23 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "kit_serie")
-public class KitSerie {
+@Table(name = "kit_serie_color")
+public class KitSerieColor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_serie_code", nullable = false)
-    private KitSerieCode serieCode;
+    @JoinColumn(name = "id_fila", nullable = false)
+    private DimFila fila;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_columna", nullable = false)
+    private DimColumna columna;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_modelo", nullable = false)
     private DimModelo modelo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_talla", nullable = false)
-    private DimTalla talla;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_color", nullable = false)
