@@ -1,6 +1,6 @@
 package com.femt.inventory_management.repository;
 
-import com.femt.inventory_management.models.kit.KitSerie;
+import com.femt.inventory_management.models.kit.KitSerieColor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface KitSerieRepository extends JpaRepository<KitSerie, Integer> {
+public interface KitSerieManagerRepository extends JpaRepository<KitSerieColor, Integer> {
 
     @Query(value = "SELECT * FROM kit_serie " +
             "WHERE id_serie_code = :idSerieCode " +
@@ -20,7 +20,7 @@ public interface KitSerieRepository extends JpaRepository<KitSerie, Integer> {
             "AND id_categoria = :idCategoria " +
             "AND id_tipo = :idTipoComponente",
             nativeQuery = true)
-    Optional<KitSerie> buscarPorModeloTallaColorCategoriaTipoComponenteSerieCode(
+    Optional<KitSerieColor> buscarPorModeloTallaColorCategoriaTipoComponenteSerieCode(
             @Param("idSerieCode") Integer idSerieCode,
             @Param("idModelo") Integer idModelo,
             @Param("idTalla") Integer idTalla,
@@ -34,7 +34,7 @@ public interface KitSerieRepository extends JpaRepository<KitSerie, Integer> {
     WHERE ks.modelo.id = :idModelo
       AND ks.categoria.id = :idCategoria
     """,nativeQuery = true)
-    List<KitSerie> findByModeloAndCategoria(
+    List<KitSerieColor> findByModeloAndCategoria(
     @Param("idModelo") Integer idModelo,
     @Param("idCategoria") Integer idCategoria
     );
@@ -46,7 +46,7 @@ public interface KitSerieRepository extends JpaRepository<KitSerie, Integer> {
       AND ks.serieCode.id = :idSerieCode
     ORDER BY ks.talla.id ASC, ks.tipoComponente.id ASC
     """, nativeQuery = true)
-    List<KitSerie> buscarTablaOrganizada(
+    List<KitSerieColor> buscarTablaOrganizada(
             Integer idModelo,
             Integer idCategoria,
             Integer idSerieCode
