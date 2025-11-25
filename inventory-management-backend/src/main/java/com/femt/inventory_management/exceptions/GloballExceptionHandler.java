@@ -50,6 +50,22 @@ public class GloballExceptionHandler {
                 ));
     }
 
+    // VENTAS
+    public ResponseEntity<?> handleVentasNotFound(VentasNotFoundException ex){
+        logger.warn("Recurso de ventas no encontrado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error",ex.getMessage()));
+    }
+
+    public ResponseEntity<?> handleVentasValidation(VentasValidationException ex){
+        logger.error("Error en la validación de ventas en {}: {}",ex.getField(),ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "error",ex.getMessage(),
+                        "campo",ex.getField()
+                ));
+    }
+
     // ===== GENERAL =====
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception ex) {
