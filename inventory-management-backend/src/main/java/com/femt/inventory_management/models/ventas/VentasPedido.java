@@ -1,14 +1,12 @@
 package com.femt.inventory_management.models.ventas;
 
-import com.femt.inventory_management.models.inventario.InventarioSandalias;
+import com.femt.inventory_management.models.kit.KitSerieManager;
 import com.femt.inventory_management.models.seguridad.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Entity
@@ -41,9 +39,9 @@ public class VentasPedido {
     private Usuario usuario;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_inventario", nullable = false,
-            foreignKey = @ForeignKey(name = "inv_sandalias_pedido_fk"))
-    private InventarioSandalias invSandalias;
+    @JoinColumn(name = "id_kit_serie_manager", nullable = false,
+            foreignKey = @ForeignKey(name = "kit_serie_manager_pedido_fk"))
+    private KitSerieManager kitSerieManager;
 
     @Column(name = "monto_total", precision = 10, scale = 2, nullable = false)
     private BigDecimal montoTotal = BigDecimal.ZERO;

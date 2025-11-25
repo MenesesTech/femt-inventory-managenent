@@ -1,246 +1,308 @@
 package com.femt.inventory_management.service.serie.imp;
 
-import com.femt.inventory_management.dto.request.KitSerieBatchRequestDTO;
-import com.femt.inventory_management.dto.request.KitSerieItemRequestDTO;
-import com.femt.inventory_management.dto.response.KitSerieResponseDTO;
-import com.femt.inventory_management.mapper.kit.KitSerieMapper;
+import com.femt.inventory_management.dto.request.KitSerieColorBatchRequest;
+import com.femt.inventory_management.dto.request.KitSerieColorRequestDTO;
+import com.femt.inventory_management.dto.response.KitSerieColorResponseDTO;
+import com.femt.inventory_management.exceptions.KitSerieNotFoundException;
+import com.femt.inventory_management.exceptions.KitSerieValidationException;
+import com.femt.inventory_management.mapper.kit.KitSerieColorMapper;
 import com.femt.inventory_management.models.dimension.*;
-import com.femt.inventory_management.models.kit.KitSerie;
-import com.femt.inventory_management.models.kit.KitSerieCode;
+import com.femt.inventory_management.models.kit.KitSerieColor;
 import com.femt.inventory_management.repository.*;
 import com.femt.inventory_management.service.serie.SerieColoresService;
-import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Servicio encargado de gestionar la creación, consulta, actualización y eliminación
- * de combinaciones de series de colores para Tira y Planta dentro del módulo de Kit Serie.
+ * de combinaciones de colores para el módulo Kit Serie.
  *
- * Implementa la lógica de negocio necesaria para:
- * - Registrar nuevas combinaciones de colores por talla, modelo y categoría.
- * - Evitar duplicados de combinaciones previamente registradas.
- * - Consultar series existentes bajo diferentes criterios.
- * - Actualizar colores asociados a una serie.
- * - Eliminar registros.
+ * Una combinación representa el color asignado a una posición dentro de una matriz definida por:
+ * fila, columna, modelo, categoría y tipo de componente (Tira o Planta).
  *
- * Este servicio opera sobre dos tipos de componentes: Tira y Planta.
+ * Este servicio permite:
+ * - Registrar múltiples combinaciones en lote.
+ * - Consultar combinaciones por ID.
+ * - Obtener la matriz completa según modelo, categoría y tipo.
+ * - Actualizar el color de una combinación específica.
+ * - Eliminar todas las combinaciones asociadas a un modelo, categoría y tipo de componente.
  */
+@Slf4j
 @Service
 public class SerieColoresServiceImp implements SerieColoresService {
 
-    // Repositorios de Dimensiones
+    private final KitSerieColorRepository seriecolorRepo;
+    private final DimFilaRepository filaRepo;
+    private final DimColumnaRepository columnaRepo;
     private final DimModeloRepository modeloRepo;
-    private final DimTallaRepository tallaRepo;
     private final DimColorRepository colorRepo;
     private final DimCategoriaRepository categoriaRepo;
     private final DimTipoComponenteRepository tipoComponenteRepo;
+    private final KitSerieColorMapper mapper;
 
-    // Repositorios de Kit Serie
-    private final KitSerieRepository serieRepo;
-    private final KitSerieCodeRepository serieCodeRepo;
-
-    // Mapper para convertir entidades en DTO
-    private final KitSerieMapper kitSerieMapper;
-
-    /**
-     * Constructor con inyección de dependencias.
-     */
-    public SerieColoresServiceImp(DimModeloRepository modeloRepo,
-                                  DimTallaRepository tallaRepo,
+    public SerieColoresServiceImp(KitSerieColorRepository seriecolorRepo,
+                                  DimFilaRepository filaRepo,
+                                  DimColumnaRepository columnaRepo,
+                                  DimModeloRepository modeloRepo,
                                   DimColorRepository colorRepo,
                                   DimCategoriaRepository categoriaRepo,
                                   DimTipoComponenteRepository tipoComponenteRepo,
-                                  KitSerieRepository serieRepo,
-                                  KitSerieCodeRepository serieCodeRepo,
-                                  KitSerieMapper kitSerieMapper) {
+                                  KitSerieColorMapper mapper) {
+        this.seriecolorRepo = seriecolorRepo;
+        this.filaRepo = filaRepo;
+        this.columnaRepo = columnaRepo;
         this.modeloRepo = modeloRepo;
-        this.tallaRepo = tallaRepo;
         this.colorRepo = colorRepo;
         this.categoriaRepo = categoriaRepo;
         this.tipoComponenteRepo = tipoComponenteRepo;
-        this.serieRepo = serieRepo;
-        this.serieCodeRepo = serieCodeRepo;
-        this.kitSerieMapper = kitSerieMapper;
+        this.mapper = mapper;
     }
 
     /**
-     * Registra un conjunto de combinaciones de series de colores para Tira y Planta.
+     * Registra un conjunto de combinaciones de colores en lote.
+     * Cada combinación corresponde a una posición fila-columna para un modelo,
+     * categoría y tipo de componente específico.
      *
-     * Cada combinación contiene:
-     *  - Talla
-     *  - Color de Tira
-     *  - Color de Planta
+     * El método valida:
+     * - Que la lista no esté vacía.
+     * - Que cada registro tenga los campos obligatorios.
+     * - Que los IDs de dimensiones existan en la base de datos.
      *
-     * El método realiza:
-     *  1. Validación del request.
-     *  2. Carga de entidades maestras (modelo, categoría, serieCode, tipos de componente).
-     *  3. Recorrido de las combinaciones enviadas.
-     *  4. Validación para evitar duplicados en BD.
-     *  5. Registro de nuevas series en batch.
-     *
-     * Si una combinación ya existe para un tipo de componente, no se vuelve a registrar.
-     *
-     * @param requestDTO DTO con la información del modelo, categoría, serieCode y todas las combinaciones.
-     * @return Lista de DTO con las combinaciones registradas exitosamente.
-     * @throws IllegalArgumentException si el request está vacío.
-     * @throws EntityNotFoundException si alguna dimensión no existe.
+     * @param request lista de combinaciones a registrar
+     * @return lista de combinaciones guardadas en formato DTO
+     * @throws KitSerieValidationException si faltan campos obligatorios
+     * @throws KitSerieNotFoundException si alguna dimensión no existe
      */
     @Override
-    @Transactional
-    public List<KitSerieResponseDTO> guardarSerie(KitSerieBatchRequestDTO requestDTO) {
+    public List<KitSerieColorResponseDTO> guardarSerieColores(KitSerieColorBatchRequest request) {
 
-        if (requestDTO == null || requestDTO.combinaciones() == null || requestDTO.combinaciones().isEmpty()) {
-            throw new IllegalArgumentException("Servicio de Series de Colores -> No hay combinaciones para registrar.");
+        if (request.colores() == null || request.colores().isEmpty()) {
+            throw new KitSerieValidationException("La lista de series está vacía", "colores");
         }
 
-        DimModelo modelo = modeloRepo.findById(requestDTO.idModelo())
-                .orElseThrow(() -> new EntityNotFoundException("Modelo no encontrado: " + requestDTO.idModelo()));
+        log.info("Registrando {} colores", request.colores().size());
 
-        DimCategoria categoria = categoriaRepo.findById(requestDTO.idCategoria())
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada: " + requestDTO.idCategoria()));
+        List<KitSerieColor> serieColores = new ArrayList<>();
 
-        KitSerieCode serieCode = serieCodeRepo.findById(requestDTO.idSerieCode())
-                .orElseThrow(() -> new EntityNotFoundException("Código de serie no encontrado: " + requestDTO.idSerieCode()));
+        for (KitSerieColorRequestDTO dto : request.colores()) {
 
-        // Tipos de componentes requeridos
-        DimTipoComponente tipoTira = tipoComponenteRepo.findByNombre("Tira")
-                .orElseThrow(() -> new EntityNotFoundException("Tipo 'Tira' no encontrado en dim_tipo_componente"));
+            validarCamposObligatorios(dto);
 
-        DimTipoComponente tipoPlanta = tipoComponenteRepo.findByNombre("Planta")
-                .orElseThrow(() -> new EntityNotFoundException("Tipo 'Planta' no encontrado en dim_tipo_componente"));
+            DimFila fila = filaRepo.findById(dto.idFila())
+                    .orElseThrow(() -> new KitSerieNotFoundException("La fila no existe"));
 
-        List<KitSerie> seriesAGuardar = new ArrayList<>();
+            DimColumna columna = columnaRepo.findById(dto.idColumna())
+                    .orElseThrow(() -> new KitSerieNotFoundException("La columna no existe"));
 
-        for (KitSerieItemRequestDTO item : requestDTO.combinaciones()) {
+            DimModelo modelo = modeloRepo.findById(dto.idModelo())
+                    .orElseThrow(() -> new KitSerieNotFoundException("El modelo no existe"));
 
-            DimTalla talla = tallaRepo.findById(item.idTalla())
-                    .orElseThrow(() -> new EntityNotFoundException("Talla no encontrada: " + item.idTalla()));
+            DimColor color = colorRepo.findById(dto.idColor())
+                    .orElseThrow(() -> new KitSerieNotFoundException("El color no existe"));
 
-            DimColor colorTira = colorRepo.findById(item.idColorTira())
-                    .orElseThrow(() -> new EntityNotFoundException("Color de Tira no encontrado: " + item.idColorTira()));
+            DimCategoria categoria = categoriaRepo.findById(dto.idCategoria())
+                    .orElseThrow(() -> new KitSerieNotFoundException("La categoría no existe"));
 
-            DimColor colorPlanta = colorRepo.findById(item.idColorPlanta())
-                    .orElseThrow(() -> new EntityNotFoundException("Color de Planta no encontrado: " + item.idColorPlanta()));
+            DimTipoComponente tipo = tipoComponenteRepo.findById(dto.idTipoComponente())
+                    .orElseThrow(() -> new KitSerieNotFoundException("El tipo de componente no existe"));
 
-            // Registro TIRA
-            Optional<KitSerie> existenteTira = serieRepo.buscarPorModeloTallaColorCategoriaTipoComponenteSerieCode(
-                    serieCode.getId(), modelo.getId(), talla.getId(), colorTira.getId(),
-                    categoria.getId(), tipoTira.getId());
+            KitSerieColor entidad = new KitSerieColor();
+            entidad.setFila(fila);
+            entidad.setColumna(columna);
+            entidad.setModelo(modelo);
+            entidad.setColor(color);
+            entidad.setCategoria(categoria);
+            entidad.setTipoComponente(tipo);
 
-            if (existenteTira.isEmpty()) {
-                KitSerie nuevaTira = new KitSerie();
-                nuevaTira.setSerieCode(serieCode);
-                nuevaTira.setModelo(modelo);
-                nuevaTira.setTalla(talla);
-                nuevaTira.setColor(colorTira);
-                nuevaTira.setCategoria(categoria);
-                nuevaTira.setTipoComponente(tipoTira);
-                seriesAGuardar.add(nuevaTira);
-            }
-
-            // Registro PLANTA
-            Optional<KitSerie> existentePlanta = serieRepo.buscarPorModeloTallaColorCategoriaTipoComponenteSerieCode(
-                    serieCode.getId(), modelo.getId(), talla.getId(), colorPlanta.getId(),
-                    categoria.getId(), tipoPlanta.getId());
-
-            if (existentePlanta.isEmpty()) {
-                KitSerie nuevaPlanta = new KitSerie();
-                nuevaPlanta.setSerieCode(serieCode);
-                nuevaPlanta.setModelo(modelo);
-                nuevaPlanta.setTalla(talla);
-                nuevaPlanta.setColor(colorPlanta);
-                nuevaPlanta.setCategoria(categoria);
-                nuevaPlanta.setTipoComponente(tipoPlanta);
-                seriesAGuardar.add(nuevaPlanta);
-            }
+            serieColores.add(entidad);
         }
 
-        List<KitSerie> seriesGuardadas = serieRepo.saveAll(seriesAGuardar);
-        return kitSerieMapper.toDTOList(seriesGuardadas);
+        List<KitSerieColor> guardadas = seriecolorRepo.saveAll(serieColores);
+
+        log.debug("Series de colores registradas: {}", guardadas.size());
+
+        return guardadas.stream().map(mapper::toDTO).toList();
     }
 
     /**
-     * Obtiene una lista completa con todas las series de colores registradas en el sistema.
+     * Obtiene una combinación por su ID.
      *
-     * @return Lista de DTO representando todas las series existentes.
+     * @param id identificador de la combinación
+     * @return DTO con los datos de la combinación
+     * @throws KitSerieNotFoundException si no existe
      */
     @Override
-    public List<KitSerieResponseDTO> listarTodo() {
-        return serieRepo.findAll()
-                .stream()
-                .map(kitSerieMapper::toDTO)
-                .toList();
+    @Transactional(readOnly = true)
+    public KitSerieColorResponseDTO obtenerPorId(Integer id) {
+
+        log.info("Buscando serie de color con id {}", id);
+
+        KitSerieColor serieColor = seriecolorRepo.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Serie de color no encontrada con id {}", id);
+                    return new KitSerieNotFoundException("No se encontró la serie de color con id " + id);
+                });
+
+        log.debug("Serie de color encontrada: {}", serieColor.getId());
+
+        return mapper.toDTO(serieColor);
     }
 
     /**
-     * Obtiene todas las series registradas asociadas a un modelo y categoría específicos.
+     * Obtiene todas las combinaciones registradas para un modelo,
+     * categoría y tipo de componente.
      *
-     * @param idModelo    Identificador del modelo.
-     * @param idCategoria Identificador de la categoría.
-     * @return Lista de DTO con las series filtradas por modelo y categoría.
+     * Se utiliza para recuperar la matriz completa de colores.
+     *
+     * @param idModelo id del modelo
+     * @param idCategoria id de la categoría
+     * @param idTipoComponente id del tipo de componente
+     * @return lista de combinaciones encontradas en formato DTO
+     * @throws KitSerieNotFoundException si no existen combinaciones
      */
     @Override
-    public List<KitSerieResponseDTO> listarPorModeloCategoria(Integer idModelo, Integer idCategoria) {
-        List<KitSerie> lista = serieRepo.findByModeloAndCategoria(idModelo, idCategoria);
-        return kitSerieMapper.toDTOList(lista);
-    }
+    @Transactional(readOnly = true)
+    public List<KitSerieColorResponseDTO> obtenerPorModeloCategoriaTipo(Integer idModelo,
+                                                                        Integer idCategoria,
+                                                                        Integer idTipoComponente) {
 
-    /**
-     * Devuelve una tabla organizada de series según:
-     * - Modelo
-     * - Categoría
-     * - Código de Serie (A1, B1, C1, D1)
-     *
-     * La tabla viene ordenada por talla y tipo de componente (Tira/Planta),
-     * ideal para ser consumida directamente por el Frontend (React).
-     *
-     * @param idModelo    Identificador del modelo.
-     * @param idCategoria Identificador de la categoría.
-     * @param idSerieCode Identificador del código de serie.
-     * @return Lista organizada de series como DTO.
-     */
-    @Override
-    public List<KitSerieResponseDTO> obtenerTablaSeries(Integer idModelo, Integer idCategoria, Integer idSerieCode) {
-        List<KitSerie> lista = serieRepo.buscarTablaOrganizada(idModelo, idCategoria, idSerieCode);
-        return lista.stream().map(kitSerieMapper::toDTO).toList();
-    }
+        log.info("Consultando series por modelo={}, categoria={}, tipo={}",
+                idModelo, idCategoria, idTipoComponente);
 
-    /**
-     * Actualiza el color asociado a una serie previamente registrada.
-     *
-     * @param idSerie       Identificador del registro de serie a actualizar.
-     * @param idColorNuevo  Identificador del nuevo color.
-     * @return DTO de la serie actualizada.
-     * @throws EntityNotFoundException si no existe la serie o el color.
-     */
-    @Override
-    public KitSerieResponseDTO actualizarSerie(Integer idSerie, Integer idColorNuevo) {
-        KitSerie serie = serieRepo.findById(idSerie)
-                .orElseThrow(() -> new EntityNotFoundException("Serie no encontrada"));
+        DimModelo modelo = modeloRepo.findById(idModelo)
+                .orElseThrow(() -> {
+                    log.error("Modelo no encontrado con ID {}", idModelo);
+                    return new KitSerieNotFoundException("Modelo no encontrado");
+                });
 
-        DimColor nuevoColor = colorRepo.findById(idColorNuevo)
-                .orElseThrow(() -> new EntityNotFoundException("Color no encontrado"));
+        DimCategoria categoria = categoriaRepo.findById(idCategoria)
+                .orElseThrow(() -> {
+                    log.error("Categoría no encontrada con ID {}", idCategoria);
+                    return new KitSerieNotFoundException("Categoría no encontrada");
+                });
 
-        serie.setColor(nuevoColor);
-        return kitSerieMapper.toDTO(serieRepo.save(serie));
-    }
+        DimTipoComponente tipo = tipoComponenteRepo.findById(idTipoComponente)
+                .orElseThrow(() -> {
+                    log.error("Tipo de componente no encontrado con ID {}", idTipoComponente);
+                    return new KitSerieNotFoundException("Tipo no encontrado");
+                });
 
-    /**
-     * Elimina un registro de serie por su identificador.
-     *
-     * @param idSerie Identificador del registro a eliminar.
-     * @throws EntityNotFoundException si el registro no existe.
-     */
-    @Override
-    public void eliminarSerie(Integer idSerie) {
-        if (!serieRepo.existsById(idSerie)) {
-            throw new EntityNotFoundException("No existe serie con id: " + idSerie);
+        List<KitSerieColor> lista =
+                seriecolorRepo.findByModeloAndCategoriaAndTipoComponente(modelo, categoria, tipo);
+
+        if (lista.isEmpty()) {
+            log.warn("No se encontraron combinaciones para los parámetros dados");
+            throw new KitSerieNotFoundException(
+                    "No existen combinaciones registradas para esos parámetros");
         }
-        serieRepo.deleteById(idSerie);
+
+        log.info("Se encontraron {} combinaciones", lista.size());
+
+        return lista.stream().map(mapper::toDTO).toList();
+    }
+
+    /**
+     * Actualiza únicamente el color asignado a una combinación específica.
+     *
+     * @param id identificador de la combinación a actualizar
+     * @param nuevoColorId id del nuevo color
+     * @return DTO con la combinación actualizada
+     * @throws KitSerieNotFoundException si la combinación o el color no existen
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public KitSerieColorResponseDTO actualizarColor(Integer id, Integer nuevoColorId) {
+
+        log.info("Solicitando actualización del color en registro id={} a nuevoColorId={}",
+                id, nuevoColorId);
+
+        KitSerieColor serieColor = seriecolorRepo.findById(id)
+                .orElseThrow(() -> {
+                    log.error("No existe combinación con ID {}", id);
+                    return new KitSerieNotFoundException("No se encontró la serie de color");
+                });
+
+        DimColor nuevoColor = colorRepo.findById(nuevoColorId)
+                .orElseThrow(() -> {
+                    log.error("No existe el color con ID {}", nuevoColorId);
+                    return new KitSerieNotFoundException("El color no existe");
+                });
+
+        serieColor.setColor(nuevoColor);
+
+        KitSerieColor actualizado = seriecolorRepo.save(serieColor);
+
+        log.info("Color actualizado correctamente para el registro id={}", id);
+
+        return mapper.toDTO(actualizado);
+    }
+
+    /**
+     * Elimina todas las combinaciones de un modelo, categoría y tipo de componente.
+     * Se utiliza cuando se necesita regenerar la matriz completa.
+     *
+     * @param idModelo id del modelo
+     * @param idCategoria id de la categoría
+     * @param idTipoComponente id del tipo de componente
+     * @throws KitSerieNotFoundException si alguna dimensión no existe
+     */
+    @Override
+    @Transactional(readOnly = false)
+    public void eliminarPorModeloCategoriaTipo(Integer idModelo,
+                                               Integer idCategoria,
+                                               Integer idTipoComponente) {
+
+        DimModelo modelo = modeloRepo.findById(idModelo)
+                .orElseThrow(() -> new KitSerieNotFoundException("El modelo no existe"));
+
+        DimCategoria categoria = categoriaRepo.findById(idCategoria)
+                .orElseThrow(() -> new KitSerieNotFoundException("La categoría no existe"));
+
+        DimTipoComponente tipo = tipoComponenteRepo.findById(idTipoComponente)
+                .orElseThrow(() -> new KitSerieNotFoundException("El tipo de componente no existe"));
+
+        seriecolorRepo.deleteByModeloAndCategoriaAndTipoComponente(modelo, categoria, tipo);
+
+        log.info("Eliminación completada para modelo={}, categoría={}, tipo={}",
+                idModelo, idCategoria, idTipoComponente);
+    }
+
+    /**
+     * Verifica que los campos mínimos obligatorios estén presentes en la solicitud.
+     * Esta validación se ejecuta antes de consultar las dimensiones en la base de datos.
+     *
+     * @param dto registro del request
+     * @throws KitSerieValidationException si falta algún campo
+     */
+    private void validarCamposObligatorios(KitSerieColorRequestDTO dto) {
+
+        if (dto.idFila() == null) {
+            throw new KitSerieValidationException("El id de la fila es obligatorio", "idFila");
+        }
+
+        if (dto.idColumna() == null) {
+            throw new KitSerieValidationException("El id de la columna es obligatorio", "idColumna");
+        }
+
+        if (dto.idModelo() == null) {
+            throw new KitSerieValidationException("El ID del modelo es obligatorio", "idModelo");
+        }
+
+        if (dto.idColor() == null) {
+            throw new KitSerieValidationException("El ID del color es obligatorio", "idColor");
+        }
+
+        if (dto.idCategoria() == null) {
+            throw new KitSerieValidationException("El ID de la categoría es obligatorio", "idCategoria");
+        }
+
+        if (dto.idTipoComponente() == null) {
+            throw new KitSerieValidationException("El ID del tipo de componente es obligatorio", "idTipoComponente");
+        }
     }
 }
+

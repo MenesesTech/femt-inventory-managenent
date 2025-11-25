@@ -1,6 +1,8 @@
 package com.femt.inventory_management.controllers.kit;
 
 import com.femt.inventory_management.dto.request.KitSerieBatchRequestDTO;
+import com.femt.inventory_management.dto.request.KitSerieColorBatchRequest;
+import com.femt.inventory_management.dto.response.KitSerieColorResponseDTO;
 import com.femt.inventory_management.dto.response.KitSerieResponseDTO;
 import com.femt.inventory_management.service.serie.imp.SerieColoresServiceImp;
 import org.springframework.http.HttpStatus;
@@ -12,51 +14,75 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/kit/serie")
 public class SerieColoresController {
-    private final SerieColoresServiceImp serieService;
+    private final SerieColoresServiceImp serieColorService;
 
-    public SerieColoresController(SerieColoresServiceImp serieService) {
-        this.serieService = serieService;
+    public SerieColoresController(SerieColoresServiceImp serieColorService) {
+        this.serieColorService = serieColorService;
     }
 
     // GUARDAR SERIES
-    @PostMapping("/guardar")
-    public ResponseEntity<List<KitSerieResponseDTO>> guardarSerie(
-            @RequestBody KitSerieBatchRequestDTO requestDTO) {
+    @PostMapping("/crear")
+    public ResponseEntity<List<KitSerieColorResponseDTO>> guardarSerie(
+            @RequestBody KitSerieColorBatchRequest requestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(serieService.guardarSerie(requestDTO));
+                .body(serieColorService.guardarSerieColores(requestDTO));
     }
 
-    // LISTAR_TODO
-    @GetMapping("/listar")
-    public ResponseEntity<List<KitSerieResponseDTO>> listarTodo() {
-        return ResponseEntity.ok(serieService.listarTodo());
+    // Buscar color por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<KitSerieColorResponseDTO> obtenerPorId(@PathVariable Integer id) {
+        return ResponseEntity.ok(serieColorService.obtenerPorId(id));
     }
 
-    // LISTAR POR MODELO Y CATEGORÍA
-    @GetMapping("/modelo/{idModelo}/categoria/{idCategoria}")
-    public ResponseEntity<List<KitSerieResponseDTO>> listarPorModeloCategoria(
-            @PathVariable Integer idModelo,
-            @PathVariable Integer idCategoria) {
-        return ResponseEntity.ok(
-                serieService.listarPorModeloCategoria(idModelo, idCategoria));
-    }
-
-    // OBTENER TABLA ORGANIZADA
-    @GetMapping("/tabla")
-    public ResponseEntity<List<KitSerieResponseDTO>> tablaSeries(
+    /**
+     * Recupera la matriz completa según modelo, categoría y tipo de componente.
+     *
+     * @param idModelo id del modelo
+     * @param idCategoria id de la categoría
+     * @param idTipoComponente id del tipo de componente
+     * @return lista de combinaciones coincidentes
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<List<KitSerieColorResponseDTO>> obtenerPorModeloCategoriaTipo(
             @RequestParam Integer idModelo,
             @RequestParam Integer idCategoria,
-            @RequestParam Integer idSerieCode) {
+            @RequestParam Integer idTipoComponente) {
 
         return ResponseEntity.ok(
-                serieService.obtenerTablaSeries(idModelo, idCategoria, idSerieCode)
+                serieColorService.obtenerPorModeloCategoriaTipo(
+                        idModelo, idCategoria, idTipoComponente
+                )
         );
     }
 
-    // ELIMINAR
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
-        serieService.eliminarSerie(id);
-        return ResponseEntity.noContent().build();
+    // ACTUALIZAR COLOR
+    @PatchMapping("/{id}/color")
+    public ResponseEntity<KitSerieColorResponseDTO> actualizarColor(
+            @PathVariable Integer id,
+            @RequestParam Integer nuevoColorId) {
+
+        return ResponseEntity.ok(
+                serieColorService.actualizarColor(id, nuevoColorId)
+        );
+    }
+
+    /**
+     * Elimina todas las combinaciones asociadas a un modelo, categoría y tipo de componente.
+     * Se utiliza antes de cargar una nueva matriz desde cero.
+     *
+     * @param idModelo id del modelo
+     * @param idCategoria id de la categoría
+     * @param idTipoComponente id del tipo de componente
+     * @return mensaje confirmando la eliminación
+     */
+    @DeleteMapping("/eliminar")
+    public ResponseEntity<String> eliminarPorModeloCategoriaTipo(
+            @RequestParam Integer idModelo,
+            @RequestParam Integer idCategoria,
+            @RequestParam Integer idTipoComponente) {
+
+        serieColorService.eliminarPorModeloCategoriaTipo(idModelo, idCategoria, idTipoComponente);
+
+        return ResponseEntity.ok("Series eliminadas correctamente");
     }
 }
