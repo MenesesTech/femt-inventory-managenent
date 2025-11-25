@@ -1,5 +1,6 @@
 package com.femt.inventory_management.models.kit;
 
+import com.femt.inventory_management.models.dimension.DimModelo;
 import com.femt.inventory_management.models.dimension.DimTalla;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,13 @@ public class KitSerieManager {
     private KitSerieColor kitSerieColor;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_modelo", nullable = false)
+    private DimModelo dimModelo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_talla", nullable = false)
     private DimTalla dimTalla;
+
+    @Column(name = "url_image", length = 50, nullable = true)
+    private String urlImage;
 }
